@@ -7,13 +7,14 @@ import (
 
 // Cache is a synchronised map of items that auto-expire once stale
 type Cache struct {
-	mutex sync.RWMutex
-	ttl   time.Duration
-	items map[string]*Item
+	mutex    sync.RWMutex
+	ttl      time.Duration
+	items    map[string]*Item
+	eviction func(key string, value interface{})
 }
 
 // Set is a thread-safe way to add new items to the map
-func (cache *Cache) Set(key string, data string) {
+func (cache *Cache) Set(key string, data interface{}) {
 	cache.mutex.Lock()
 	item := &Item{data: data}
 	item.touch(cache.ttl)
@@ -23,7 +24,7 @@ func (cache *Cache) Set(key string, data string) {
 
 // Get is a thread-safe way to lookup items
 // Every lookup, also touches the item, hence extending it's life
-func (cache *Cache) Get(key string) (data string, found bool) {
+func (cache *Cache) Get(key string) (data interface{}, found bool) {
 	cache.mutex.Lock()
 	item, exists := cache.items[key]
 	if !exists || item.expired() {
@@ -51,6 +52,9 @@ func (cache *Cache) cleanup() {
 	cache.mutex.Lock()
 	for key, item := range cache.items {
 		if item.expired() {
+			if cache.eviction != nil {
+				cache.eviction(key, cache.items[key])
+			}
 			delete(cache.items, key)
 		}
 	}
@@ -71,6 +75,10 @@ func (cache *Cache) startCleanupTimer() {
 			}
 		}
 	})()
+}
+
+func (cache *Cache) SetEvictionFunction(evictionFunc func(key string, value interface{})) {
+	cache.eviction = evictionFunc
 }
 
 // NewCache is a helper to create instance of the Cache struct
