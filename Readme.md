@@ -18,7 +18,7 @@ import (
 func main () {
   cache := ttlcache.NewCache(time.Second)
   cache.Set("key", "value")
-  value, exists := cache.Get("key")
+  value, exists := cache.Get("key", true)
   count := cache.Count()
 }
 ```
