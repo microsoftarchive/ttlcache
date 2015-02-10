@@ -11,13 +11,13 @@ func TestGet(t *testing.T) {
 		items: map[string]*Item{},
 	}
 
-	data, exists := cache.Get("hello")
+	data, exists := cache.Get("hello", true)
 	if exists || data != "" {
 		t.Errorf("Expected empty cache to return no data")
 	}
 
 	cache.Set("hello", "world")
-	data, exists = cache.Get("hello")
+	data, exists = cache.Get("hello", true)
 	if !exists {
 		t.Errorf("Expected cache to return data for `hello`")
 	}
