@@ -20,7 +20,7 @@ func main () {
   cache.Set("key", "value", time.Second)
   cache.Set("key1", 24, time.Duration(500) * time.Millisecond)
   cache.Set("key3", time.Second, time.Second)
-  value, exists := cache.Get("key", true)
+  value, exists := cache.Get("key", true) // true - extend cache ttl, otherwise false
   count := cache.Count()
 }
 ```
