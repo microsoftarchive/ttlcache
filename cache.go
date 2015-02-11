@@ -8,22 +8,21 @@ import (
 // Cache is a synchronised map of items that auto-expire once stale
 type Cache struct {
 	mutex sync.RWMutex
-	ttl   time.Duration
 	items map[string]*Item
 }
 
 // Set is a thread-safe way to add new items to the map
-func (cache *Cache) Set(key string, data string) {
+func (cache *Cache) Set(key string, data interface{}, ttl time.Duration) {
 	cache.mutex.Lock()
-	item := &Item{data: data}
-	item.touch(cache.ttl)
+	item := &Item{data: data, ttl: ttl}
+	item.touch()
 	cache.items[key] = item
 	cache.mutex.Unlock()
 }
 
 // Get is a thread-safe way to lookup items
-// Every lookup, if toch set to true, touches the item, hence extending it's life
-func (cache *Cache) Get(key string, touch bool) (data string, found bool) {
+// Every lookup, if touch set to true, touches the item, hence extending it's life
+func (cache *Cache) Get(key string, touch bool) (data interface{}, found bool) {
 	cache.mutex.Lock()
 	item, exists := cache.items[key]
 	if !exists || item.expired() {
@@ -31,7 +30,7 @@ func (cache *Cache) Get(key string, touch bool) (data string, found bool) {
 		found = false
 	} else {
 		if touch {
-			item.touch(cache.ttl)
+			item.touch()
 		}
 		data = item.data
 		found = true
@@ -60,9 +59,11 @@ func (cache *Cache) cleanup() {
 }
 
 func (cache *Cache) startCleanupTimer() {
-	duration := cache.ttl
-	if duration < time.Second {
-		duration = time.Second
+	duration := time.Second
+	for i := range cache.items {
+		if cache.items[i].ttl < time.Second {
+			duration = cache.items[i].ttl
+		}
 	}
 	ticker := time.Tick(duration)
 	go (func() {
@@ -76,9 +77,8 @@ func (cache *Cache) startCleanupTimer() {
 }
 
 // NewCache is a helper to create instance of the Cache struct
-func NewCache(duration time.Duration) *Cache {
+func NewCache() *Cache {
 	cache := &Cache{
-		ttl:   duration,
 		items: map[string]*Item{},
 	}
 	cache.startCleanupTimer()

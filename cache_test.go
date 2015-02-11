@@ -7,7 +7,6 @@ import (
 
 func TestGet(t *testing.T) {
 	cache := &Cache{
-		ttl:   time.Second,
 		items: map[string]*Item{},
 	}
 
@@ -16,7 +15,7 @@ func TestGet(t *testing.T) {
 		t.Errorf("Expected empty cache to return no data")
 	}
 
-	cache.Set("hello", "world")
+	cache.Set("hello", "world", time.Second)
 	data, exists = cache.Get("hello", true)
 	if !exists {
 		t.Errorf("Expected cache to return data for `hello`")
@@ -28,13 +27,12 @@ func TestGet(t *testing.T) {
 
 func TestExpiration(t *testing.T) {
 	cache := &Cache{
-		ttl:   time.Second,
 		items: map[string]*Item{},
 	}
 
-	cache.Set("x", "1")
-	cache.Set("y", "z")
-	cache.Set("z", "3")
+	cache.Set("x", "1", time.Second)
+	cache.Set("y", 123, time.Second)
+	cache.Set("z", time.Second, time.Second)
 	cache.startCleanupTimer()
 
 	count := cache.Count()
@@ -44,7 +42,7 @@ func TestExpiration(t *testing.T) {
 
 	<-time.After(500 * time.Millisecond)
 	cache.mutex.Lock()
-	cache.items["y"].touch(time.Second)
+	cache.items["y"].touch()
 	item, exists := cache.items["x"]
 	cache.mutex.Unlock()
 	if !exists || item.data != "1" || item.expired() {
