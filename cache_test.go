@@ -1,14 +1,16 @@
 package ttlcache
 
 import (
+	"runtime"
 	"testing"
 	"time"
 )
 
 func TestGet(t *testing.T) {
 	cache := &Cache{
-		ttl:   time.Second,
-		items: map[string]*Item{},
+		ttl:      time.Second,
+		items:    map[string]*Item{},
+		shutdown: make(chan bool, 1),
 	}
 
 	data, exists := cache.Get("hello")
@@ -24,12 +26,15 @@ func TestGet(t *testing.T) {
 	if data != "world" {
 		t.Errorf("Expected cache to return `world` for `hello`")
 	}
+
+	cache.Close()
 }
 
 func TestExpiration(t *testing.T) {
 	cache := &Cache{
-		ttl:   time.Second,
-		items: map[string]*Item{},
+		ttl:      time.Second,
+		items:    map[string]*Item{},
+		shutdown: make(chan bool, 1),
 	}
 
 	cache.Set("x", "1")
@@ -83,5 +88,21 @@ func TestExpiration(t *testing.T) {
 	count = cache.Count()
 	if count != 0 {
 		t.Errorf("Expected cache to be empty")
+	}
+
+	cache.Close()
+}
+
+func TestClose(t *testing.T) {
+	initial := runtime.NumGoroutine()
+	cache := NewCache(time.Second)
+	if runtime.NumGoroutine() != 1+initial {
+		t.Errorf("Expected the number of go routines to increase by one")
+	}
+
+	cache.Close()
+	time.Sleep(time.Second)
+	if runtime.NumGoroutine() != initial {
+		t.Errorf("Expected the number of go routines to decrease by one")
 	}
 }
