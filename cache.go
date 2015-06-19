@@ -78,7 +78,7 @@ func (cache *Cache) startCleanupTimer() {
 
 func (cache *Cache) cleanAll() {
 	cache.mutex.Lock()
-	for key, item := range cache.items {
+	for key, _ := range cache.items {
 			delete(cache.items, key)
 	}
 	cache.mutex.Unlock()
