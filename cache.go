@@ -76,6 +76,14 @@ func (cache *Cache) startCleanupTimer() {
 	})()
 }
 
+func (cache *Cache) cleanAll() {
+	cache.mutex.Lock()
+	for key, item := range cache.items {
+			delete(cache.items, key)
+	}
+	cache.mutex.Unlock()
+}
+
 // NewCache is a helper to create instance of the Cache struct
 func NewCache() *Cache {
 	cache := &Cache{
