@@ -76,7 +76,7 @@ func (cache *Cache) startCleanupTimer() {
 	})()
 }
 
-func (cache *Cache) cleanAll() {
+func (cache *Cache) CleanAll() {
 	cache.mutex.Lock()
 	for key, _ := range cache.items {
 			delete(cache.items, key)
