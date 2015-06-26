@@ -9,6 +9,7 @@ import (
 type Cache struct {
 	mutex sync.RWMutex
 	items map[string]*Item
+	getCounter  uint64
 }
 
 // Set is a thread-safe way to add new items to the map
@@ -32,11 +33,16 @@ func (cache *Cache) Get(key string, touch bool) (data interface{}, found bool) {
 		if touch {
 			item.touch()
 		}
+		cache.getCounter += 1
 		data = item.data
 		found = true
 	}
 	cache.mutex.Unlock()
 	return
+}
+
+func (cache *Cache) getCounter() int64 {
+	return cache.getCounter
 }
 
 // Count returns the number of items in the cache
