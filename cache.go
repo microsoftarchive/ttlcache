@@ -33,7 +33,7 @@ func (cache *Cache) Get(key string, touch bool) (data interface{}, found bool) {
 		if touch {
 			item.touch()
 		}
-		cache.getCounter += 1
+		cache.getCounter ++
 		data = item.data
 		found = true
 	}
@@ -41,7 +41,7 @@ func (cache *Cache) Get(key string, touch bool) (data interface{}, found bool) {
 	return
 }
 
-func (cache *Cache) getCounter() int64 {
+func (cache *Cache) getCounter() uint64 {
 	return cache.getCounter
 }
 
@@ -94,6 +94,7 @@ func (cache *Cache) CleanAll() {
 func NewCache() *Cache {
 	cache := &Cache{
 		items: map[string]*Item{},
+
 	}
 	cache.startCleanupTimer()
 	return cache
