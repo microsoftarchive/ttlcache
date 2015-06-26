@@ -41,7 +41,7 @@ func (cache *Cache) Get(key string, touch bool) (data interface{}, found bool) {
 	return
 }
 
-func (cache *Cache) getCounter() uint64 {
+func (cache *Cache) GetCounter() uint64 {
 	return cache.counter
 }
 

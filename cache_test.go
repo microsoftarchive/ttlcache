@@ -23,6 +23,9 @@ func TestGet(t *testing.T) {
 	if data != "world" {
 		t.Errorf("Expected cache to return `world` for `hello`")
 	}
+	if cache.GetCounter() != 1 {
+		t.Errorf("Expected cache get counter is equal to 1")
+	}
 }
 
 func TestExpiration(t *testing.T) {
