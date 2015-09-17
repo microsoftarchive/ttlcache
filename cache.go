@@ -7,9 +7,9 @@ import (
 
 // Cache is a synchronised map of items that auto-expire once stale
 type Cache struct {
-	mutex sync.RWMutex
-	items map[string]*Item
-	counter  uint64
+	mutex   sync.RWMutex
+	items   map[string]*Item
+	counter uint64
 }
 
 // Set is a thread-safe way to add new items to the map
@@ -33,7 +33,7 @@ func (cache *Cache) Get(key string, touch bool) (data interface{}, found bool) {
 		if touch {
 			item.touch()
 		}
-		cache.counter ++
+		cache.counter++
 		data = item.data
 		found = true
 	}
@@ -85,8 +85,14 @@ func (cache *Cache) startCleanupTimer() {
 func (cache *Cache) CleanAll() {
 	cache.mutex.Lock()
 	for key, _ := range cache.items {
-			delete(cache.items, key)
+		delete(cache.items, key)
 	}
+	cache.mutex.Unlock()
+}
+
+func (cache *Cache) Delete(key string) {
+	cache.mutex.Lock()
+	delete(cache.items, key)
 	cache.mutex.Unlock()
 }
 
@@ -94,7 +100,6 @@ func (cache *Cache) CleanAll() {
 func NewCache() *Cache {
 	cache := &Cache{
 		items: map[string]*Item{},
-
 	}
 	cache.startCleanupTimer()
 	return cache
