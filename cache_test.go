@@ -12,16 +12,16 @@ func TestGet(t *testing.T) {
 	}
 
 	data, exists := cache.Get("hello")
-	if exists || data != "" {
+	if exists || data != nil {
 		t.Errorf("Expected empty cache to return no data")
 	}
 
-	cache.Set("hello", "world")
+	cache.Set("hello", []byte("world"))
 	data, exists = cache.Get("hello")
 	if !exists {
 		t.Errorf("Expected cache to return data for `hello`")
 	}
-	if data != "world" {
+	if string(data) != "world" {
 		t.Errorf("Expected cache to return `world` for `hello`")
 	}
 }
@@ -32,10 +32,10 @@ func TestExpiration(t *testing.T) {
 		items: map[string]*Item{},
 	}
 
-	cache.Set("x", "1")
-	cache.Set("y", "z")
-	cache.Set("z", "3")
-	cache.startCleanupTimer()
+	cache.Set("x", []byte("1"))
+	cache.Set("y", []byte("z"))
+	cache.Set("z", []byte("3"))
+	cache.startEvictionTimer()
 
 	count := cache.Count()
 	if count != 3 {
@@ -43,16 +43,16 @@ func TestExpiration(t *testing.T) {
 	}
 
 	<-time.After(500 * time.Millisecond)
-	cache.mutex.Lock()
+	cache.Lock()
 	cache.items["y"].touch(time.Second)
 	item, exists := cache.items["x"]
-	cache.mutex.Unlock()
-	if !exists || item.data != "1" || item.expired() {
+	cache.Unlock()
+	if !exists || string(item.data) != "1" || item.expired() {
 		t.Errorf("Expected `x` to not have expired after 200ms")
 	}
 
 	<-time.After(time.Second)
-	cache.mutex.RLock()
+	cache.RLock()
 	_, exists = cache.items["x"]
 	if exists {
 		t.Errorf("Expected `x` to have expired")
@@ -65,7 +65,7 @@ func TestExpiration(t *testing.T) {
 	if !exists {
 		t.Errorf("Expected `y` to not have expired")
 	}
-	cache.mutex.RUnlock()
+	cache.RUnlock()
 
 	count = cache.Count()
 	if count != 1 {
@@ -73,12 +73,12 @@ func TestExpiration(t *testing.T) {
 	}
 
 	<-time.After(600 * time.Millisecond)
-	cache.mutex.RLock()
+	cache.RLock()
 	_, exists = cache.items["y"]
 	if exists {
 		t.Errorf("Expected `y` to have expired")
 	}
-	cache.mutex.RUnlock()
+	cache.RUnlock()
 
 	count = cache.Count()
 	if count != 0 {
