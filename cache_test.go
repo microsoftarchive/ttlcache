@@ -28,7 +28,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func testDelete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	cache := &Cache{
 		items: map[string]*Item{},
 	}
