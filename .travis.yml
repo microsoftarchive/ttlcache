@@ -1,21 +1,18 @@
 language: go
 
 go:
-  - 1.2
-  - release
-  - tip
+  - 1.7
 
 git:
   depth: 1
 
 install:
   - go install -race std
-  - go get code.google.com/p/go.tools/cmd/cover
+  - go get golang.org/x/tools/cmd/cover
   - go get github.com/golang/lint/golint
-  - go get github.com/tools/godep
   - export PATH=$HOME/gopath/bin:$PATH
 
 script:
   - golint .
-  - godep go test -race ./...
-  - godep go test -cover ./...
+  - go test -race ./...
+  - go test -cover ./...
